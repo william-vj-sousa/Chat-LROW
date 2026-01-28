@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FrançaisBot - Apprendre le français</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .auth-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .dashboard {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .welcome-card h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .feature-card .icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .chat-interface {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .chat-interface.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .chat-header h3 {
+            color: #667eea;
+        }
+
+        .back-btn {
+            padding: 8px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.bot {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .send-btn:hover {
+            background: #5568d3;
+        }
+
+        .exercise-prompts {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .prompt-card {
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .prompt-card:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        .prompt-card h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .prompt-card p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .user-info {
+            text-align: right;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🇫🇷 FrançaisBot</h1>
+            <p>Votre assistant personnel pour apprendre le français</p>
+        </header>
+
+        <!-- User Info (hidden initially) -->
+        <div class="user-info" id="userInfo" style="display: none;">
+            <span id="userName">Bienvenue, Étudiant!</span>
+            <button class="logout-btn" onclick="logout()">Déconnexion</button>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="auth-section" id="authSection">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">Commencez votre apprentissage</h2>
+            <div class="auth-buttons">
+                <button class="btn btn-primary" onclick="login()">Se connecter</button>
+                <button class="btn btn-secondary" onclick="register()">Créer un compte</button>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard" id="dashboard">
+            <div class="welcome-card">
+                <h2>Tableau de bord</h2>
+                <p>Choisissez une activité pour commencer votre pratique du français.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card" onclick="openFreeWriting()">
+                    <div class="icon">✍️</div>
+                    <h3>Écriture libre</h3>
+                    <p>Pratiquez votre français en écrivant librement. Le chatbot vous aidera à corriger vos erreurs et à améliorer votre style.</p>
+                </div>
+
+                <div class="feature-card" onclick="openExercises()">
+                    <div class="icon">📝</div>
+                    <h3>Exercices guidés</h3>
+                    <p>Complétez des exercices avec des prompts spécifiques pour travailler la grammaire, le vocabulaire et la conjugaison.</p>
+                </div>
+
+                <div class="feature-card" onclick="openConversation()">
+                    <div class="icon">💬</div>
+                    <h3>Conversation</h3>
+                    <p>Discutez en français avec le chatbot pour améliorer votre compréhension et votre expression écrite.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Free Writing Interface -->
+        <div class="chat-interface" id="freeWriting">
+            <div class="chat-header">
+                <h3>✍️ Écriture libre</h3>
+                <button class="back-btn" onclick="backToDashboard()">← Retour</button>
+            </div>
+            <div class="chat-messages" id="freeWritingMessages">
+                <div class="message bot">
+                    Bonjour! Écrivez ce que vous voulez en français. Je suis là pour vous aider à corriger vos erreurs et à améliorer votre écriture. De quoi aimeriez-vous parler aujourd'hui?
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="freeWritingInput" placeholder="Écrivez votre texte ici..." onkeypress="handleKeyPress(event, 'freeWriting')">
+                <button class="send-btn" onclick="sendMessage('freeWriting')">Envoyer</button>
+            </div>
+        </div>
+
+        <!-- Exercises Interface -->
+        <div class="chat-interface" id="exercises">
+            <div class="chat-header">
+                <h3>📝 Exercices guidés</h3>
+                <button class="back-btn" onclick="backToDashboard()">← Retour</button>
+            </div>
+            <div class="exercise-prompts">
+                <div class="prompt-card" onclick="selectExercise('Décrivez votre journée idéale en utilisant le futur simple.')">
+                    <h4>Le futur simple</h4>
+                    <p>Décrivez votre journée idéale en utilisant le futur simple.</p>
+                </div>
+                <div class="prompt-card" onclick="selectExercise('Racontez une histoire au passé composé avec l\'imparfait.')">
+                    <h4>Passé composé et imparfait</h4>
+                    <p>Racontez une histoire au passé composé avec l'imparfait.</p>
+                </div>
+                <div class="prompt-card" onclick="selectExercise('Écrivez une lettre formelle pour postuler à un emploi.')">
+                    <h4>Lettre formelle</h4>
+                    <p>Écrivez une lettre formelle pour postuler à un emploi.</p>
+                </div>
+                <div class="prompt-card" onclick="selectExercise('Décrivez votre ville en utilisant des adjectifs variés.')">
+                    <h4>Les adjectifs</h4>
+                    <p>Décrivez votre ville en utilisant des adjectifs variés.</p>
+                </div>
+            </div>
+            <div class="chat-messages" id="exerciseMessages" style="margin-top: 20px; display: none;">
+            </div>
+            <div class="chat-input-area" id="exerciseInputArea" style="margin-top: 20px; display: none;">
+                <input type="text" class="chat-input" id="exerciseInput" placeholder="Écrivez votre réponse..." onkeypress="handleKeyPress(event, 'exercise')">
+                <button class="send-btn" onclick="sendMessage('exercise')">Envoyer</button>
+            </div>
+        </div>
+
+        <!-- Conversation Interface -->
+        <div class="chat-interface" id="conversation">
+            <div class="chat-header">
+                <h3>💬 Conversation</h3>
+                <button class="back-btn" onclick="backToDashboard()">← Retour</button>
+            </div>
+            <div class="chat-messages" id="conversationMessages">
+                <div class="message bot">
+                    Salut! Je suis ton partenaire de conversation. Discutons en français! Comment vas-tu aujourd'hui?
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="conversationInput" placeholder="Tapez votre message..." onkeypress="handleKeyPress(event, 'conversation')">
+                <button class="send-btn" onclick="sendMessage('conversation')">Envoyer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple login/logout functionality
+        function login() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            document.getElementById('userInfo').style.display = 'block';
+        }
+
+        function register() {
+            alert('Fonctionnalité de création de compte - À implémenter avec votre backend');
+            login(); // For demo purposes
+        }
+
+        function logout() {
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('userInfo').style.display = 'none';
+            backToDashboard();
+        }
+
+        // Navigation functions
+        function openFreeWriting() {
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('freeWriting').classList.add('active');
+        }
+
+        function openExercises() {
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('exercises').classList.add('active');
+        }
+
+        function openConversation() {
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('conversation').classList.add('active');
+        }
+
+        function backToDashboard() {
+            document.getElementById('freeWriting').classList.remove('active');
+            document.getElementById('exercises').classList.remove('active');
+            document.getElementById('conversation').classList.remove('active');
+            document.getElementById('dashboard').classList.add('active');
+            
+            // Reset exercise view
+            document.getElementById('exerciseMessages').style.display = 'none';
+            document.getElementById('exerciseInputArea').style.display = 'none';
+        }
+
+        // Exercise selection
+        function selectExercise(prompt) {
+            document.getElementById('exerciseMessages').style.display = 'block';
+            document.getElementById('exerciseInputArea').style.display = 'flex';
+            
+            const messagesDiv = document.getElementById('exerciseMessages');
+            messagesDiv.innerHTML = `
+                <div class="message bot">
+                    Excellent choix! Voici votre exercice:<br><br>
+                    <strong>${prompt}</strong><br><br>
+                    Prenez votre temps et écrivez votre réponse. Je vous aiderai à corriger et à améliorer votre texte.
+                </div>
+            `;
+        }
+
+        // Message sending
+        function sendMessage(type) {
+            const inputId = type === 'freeWriting' ? 'freeWritingInput' : 
+                           type === 'exercise' ? 'exerciseInput' : 'conversationInput';
+            const messagesId = type === 'freeWriting' ? 'freeWritingMessages' : 
+                              type === 'exercise' ? 'exerciseMessages' : 'conversationMessages';
+            
+            const input = document.getElementById(inputId);
+            const messagesDiv = document.getElementById(messagesId);
+            const message = input.value.trim();
+            
+            if (message === '') return;
+            
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.textContent = message;
+            messagesDiv.appendChild(userMsg);
+            
+            input.value = '';
+            
+            // Simulate bot response (in real app, this would call your AI wrapper)
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = 'message bot';
+                botMsg.innerHTML = getBotResponse(message, type);
+                messagesDiv.appendChild(botMsg);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }, 1000);
+            
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function getBotResponse(userMessage, type) {
+            // Simulated responses - replace with actual AI wrapper API call
+            const responses = {
+                freeWriting: "Très bien! J'ai remarqué quelques points à améliorer dans votre texte. Voici mes suggestions...",
+                exercise: "Bon travail! Votre texte montre une bonne compréhension. Permettez-moi de corriger quelques petites erreurs...",
+                conversation: "C'est intéressant! Pouvez-vous m'en dire plus?"
+            };
+            
+            return responses[type] || "Merci pour votre message!";
+        }
+
+        function handleKeyPress(event, type) {
+            if (event.key === 'Enter') {
+                sendMessage(type);
+            }
+        }
+    </script>
+</body>
+</html>

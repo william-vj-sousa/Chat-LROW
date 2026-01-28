@@ -3,544 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FrançaisBot - Apprendre le français</title>
+    <title>AUP FrançaisBot | Learning Portal</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --aup-black: #050505;
+            --aup-blue: #4a69bd;
+            --aup-red: #d63031;
+            --aup-white: #ffffff;
+            --aup-gray: #f8f9fa;
+            --aup-text: #2d3436;
+            --aup-border: #e1e1e1;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: all 0.2s ease-in-out; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Optima', 'Segoe UI', serif;
+            background-color: var(--aup-black);
+            color: var(--aup-text);
             min-height: 100vh;
-            padding: 20px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        /* Sleek Navbar */
+        nav {
+            background: var(--aup-white);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--aup-red);
         }
+        .logo-placeholder { height: 50px; }
+        .lang-switch { display: flex; gap: 10px; }
+        .btn-lang { background: none; border: 1px solid #ccc; padding: 5px 12px; cursor: pointer; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-lang.active { background: var(--aup-blue); color: white; border-color: var(--aup-blue); }
 
         header {
             text-align: center;
             color: white;
-            margin-bottom: 40px;
+            padding: 60px 20px;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
         }
+        header h1 { font-size: 3em; letter-spacing: 2px; margin-bottom: 10px; }
 
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
+        .container { max-width: 1100px; margin: -40px auto 40px; padding: 0 20px; }
+        .main-card { background: var(--aup-white); padding: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); border-radius: 0; }
 
-        header p {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
+        /* Role Selector */
+        .role-pill { display: flex; background: #eee; padding: 4px; width: 250px; margin: 0 auto 30px; }
+        .role-pill button { flex: 1; padding: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 0.75em; text-transform: uppercase; background: none; }
+        .role-pill button.active { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        .auth-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
+        /* Dashboard Grid */
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-top: 30px; }
+        .feature-card { border: 1px solid #eee; padding: 30px; text-align: center; cursor: pointer; position: relative; }
+        .feature-card:hover { border-color: var(--aup-blue); transform: translateY(-5px); }
+        .feature-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: var(--aup-red); transform: scaleX(0); transition: 0.3s; }
+        .feature-card:hover::after { transform: scaleX(1); }
 
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+        /* Assign Section */
+        .assign-section { background: var(--aup-gray); padding: 25px; margin-top: 30px; border-top: 3px solid var(--aup-red); }
+        .input-field { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; font-family: inherit; }
 
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
+        /* Stats & Tables */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-item { background: var(--aup-gray); padding: 20px; border-left: 4px solid var(--aup-blue); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
+        th { text-align: left; padding: 15px; background: var(--aup-gray); border-bottom: 2px solid var(--aup-red); }
+        td { padding: 15px; border-bottom: 1px solid #eee; }
 
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
+        /* Chat */
+        .chat-messages { height: 400px; background: #fdfdfd; border: 1px solid #eee; overflow-y: auto; padding: 20px; margin-bottom: 20px; }
+        .message { margin-bottom: 20px; max-width: 75%; padding: 15px; }
+        .message.bot { background: var(--aup-gray); border-left: 4px solid var(--aup-blue); }
+        .message.user { background: var(--aup-black); color: white; margin-left: auto; }
 
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .btn-secondary:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-        }
-
-        .dashboard {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dashboard.active {
-            display: block;
-        }
-
-        .welcome-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-
-        .welcome-card h2 {
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .feature-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border-color: #667eea;
-        }
-
-        .feature-card .icon {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-        }
-
-        .feature-card h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .feature-card p {
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .chat-interface {
-            display: none;
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .chat-interface.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-
-        .chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .chat-header h3 {
-            color: #667eea;
-        }
-
-        .back-btn {
-            padding: 8px 20px;
-            background: #f0f0f0;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-
-        .back-btn:hover {
-            background: #e0e0e0;
-        }
-
-        .chat-messages {
-            height: 400px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 10px;
-        }
-
-        .message {
-            margin-bottom: 15px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            max-width: 80%;
-            line-height: 1.5;
-        }
-
-        .message.user {
-            background: #667eea;
-            color: white;
-            margin-left: auto;
-        }
-
-        .message.bot {
-            background: white;
-            color: #333;
-            border: 1px solid #e0e0e0;
-        }
-
-        .chat-input-area {
-            display: flex;
-            gap: 10px;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            font-family: inherit;
-        }
-
-        .chat-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .send-btn {
-            padding: 12px 24px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .send-btn:hover {
-            background: #5568d3;
-        }
-
-        .exercise-prompts {
-            display: grid;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .prompt-card {
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .prompt-card:hover {
-            background: #f0f0f0;
-            transform: translateX(5px);
-        }
-
-        .prompt-card h4 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .prompt-card p {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .user-info {
-            text-align: right;
-            color: white;
-            margin-bottom: 20px;
-        }
-
-        .logout-btn {
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid white;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 2em;
-            }
-            
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        .btn { padding: 12px 35px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; cursor: pointer; border: none; }
+        .btn-primary { background: var(--aup-black); color: white; }
+        .btn-primary:hover { background: var(--aup-red); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
+
+    <nav>
+        <img src="aup.png" alt="AUP Logo" class="logo-placeholder">
+        <div class="lang-switch">
+            <button class="btn-lang active" onclick="setLanguage('fr')">FR</button>
+            <button class="btn-lang" onclick="setLanguage('en')">EN</button>
+        </div>
+    </nav>
+
+    <header>
+        <h1 id="txt-title">FrançaisBot</h1>
+        <p id="txt-subtitle">L'excellence dans l'apprentissage de la langue française.</p>
+    </header>
+
     <div class="container">
-        <header>
-            <h1>🇫🇷 FrançaisBot</h1>
-            <p>Votre assistant personnel pour apprendre le français</p>
-        </header>
-
-        <!-- User Info (hidden initially) -->
-        <div class="user-info" id="userInfo" style="display: none;">
-            <span id="userName">Bienvenue, Étudiant!</span>
-            <button class="logout-btn" onclick="logout()">Déconnexion</button>
-        </div>
-
-        <!-- Authentication Section -->
-        <div class="auth-section" id="authSection">
-            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">Commencez votre apprentissage</h2>
-            <div class="auth-buttons">
-                <button class="btn btn-primary" onclick="login()">Se connecter</button>
-                <button class="btn btn-secondary" onclick="register()">Créer un compte</button>
+        <div class="main-card" id="authSection">
+            <div class="role-pill">
+                <button id="roleStudent" class="active" onclick="toggleRole('student')">Student</button>
+                <button id="roleTeacher" onclick="toggleRole('teacher')">Teacher</button>
+            </div>
+            <h2 id="txt-auth-title" style="text-align: center; margin-bottom: 30px;">Portail Étudiant</h2>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <input type="email" placeholder="Email institutionnel" style="width: 300px; padding: 12px; border: 1px solid #ddd;">
+                <button class="btn btn-primary" onclick="login()" id="txt-login" style="width: 300px;">Se Connecter</button>
             </div>
         </div>
 
-        <!-- Dashboard -->
-        <div class="dashboard" id="dashboard">
-            <div class="welcome-card">
-                <h2>Tableau de bord</h2>
-                <p>Choisissez une activité pour commencer votre pratique du français.</p>
+        <div class="main-card hidden" id="studentDashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 id="txt-dash-welcome">Tableau de Bord</h2>
+                <button onclick="logout()" style="background:none; border:none; color:var(--aup-red); cursor:pointer; font-weight:bold" id="txt-logout">Déconnexion</button>
             </div>
-
             <div class="features-grid">
-                <div class="feature-card" onclick="openFreeWriting()">
-                    <div class="icon">✍️</div>
-                    <h3>Écriture libre</h3>
-                    <p>Pratiquez votre français en écrivant librement. Le chatbot vous aidera à corriger vos erreurs et à améliorer votre style.</p>
+                <div class="feature-card" onclick="showChat('writing')">
+                    <span class="icon">✒️</span>
+                    <h3 id="txt-feat1-title">Écriture libre</h3>
+                    <p id="txt-feat1-desc">Perfectionnez votre style.</p>
                 </div>
-
-                <div class="feature-card" onclick="openExercises()">
-                    <div class="icon">📝</div>
-                    <h3>Exercices guidés</h3>
-                    <p>Complétez des exercices avec des prompts spécifiques pour travailler la grammaire, le vocabulaire et la conjugaison.</p>
+                <div class="feature-card" id="assignmentCard" onclick="showChat('assignment')" style="border-color: var(--aup-red);">
+                    <span class="icon">📍</span>
+                    <h3 id="txt-assignment-title">Devoirs assignés</h3>
+                    <p id="activePromptText">Aucun devoir en attente.</p>
                 </div>
-
-                <div class="feature-card" onclick="openConversation()">
-                    <div class="icon">💬</div>
-                    <h3>Conversation</h3>
-                    <p>Discutez en français avec le chatbot pour améliorer votre compréhension et votre expression écrite.</p>
+                <div class="feature-card" onclick="showChat('chat')">
+                    <span class="icon">💬</span>
+                    <h3 id="txt-feat3-title">Conversation</h3>
+                    <p id="txt-feat3-desc">Dialogue interactif.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Free Writing Interface -->
-        <div class="chat-interface" id="freeWriting">
-            <div class="chat-header">
-                <h3>✍️ Écriture libre</h3>
-                <button class="back-btn" onclick="backToDashboard()">← Retour</button>
+        <div class="main-card hidden" id="teacherDashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 id="txt-teacher-title">Analyses de la Classe</h2>
+                <button onclick="logout()" style="background:none; border:none; color:var(--aup-red); cursor:pointer; font-weight:bold">SIGN OUT</button>
             </div>
-            <div class="chat-messages" id="freeWritingMessages">
-                <div class="message bot">
-                    Bonjour! Écrivez ce que vous voulez en français. Je suis là pour vous aider à corriger vos erreurs et à améliorer votre écriture. De quoi aimeriez-vous parler aujourd'hui?
-                </div>
+            
+            <div class="stats-row">
+                <div class="stat-item"><span>Moyenne Classe</span><h4>84%</h4></div>
+                <div class="stat-item"><span>Étudiants Actifs</span><h4>24</h4></div>
+                <div class="stat-item"><span>Niveau Moyen</span><h4>B2</h4></div>
             </div>
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" id="freeWritingInput" placeholder="Écrivez votre texte ici..." onkeypress="handleKeyPress(event, 'freeWriting')">
-                <button class="send-btn" onclick="sendMessage('freeWriting')">Envoyer</button>
+
+            <div class="assign-section">
+                <h3 style="margin-bottom: 15px;">Assigner un nouveau sujet</h3>
+                <input type="text" id="promptInput" class="input-field" placeholder="Ex: Racontez vos dernières vacances au passé composé...">
+                <select id="studentSelect" class="input-field">
+                    <option value="all">Tous les étudiants (Section FR101)</option>
+                    <option value="alice">Alice Martin</option>
+                    <option value="john">John Doe</option>
+                </select>
+                <button class="btn btn-primary" onclick="assignPrompt()">Envoyer le Devoir</button>
             </div>
+
+            <table id="analyticsTable">
+                <thead>
+                    <tr><th>Étudiant</th><th>Progression</th><th>Dernier Sujet</th><th>Score</th></tr>
+                </thead>
+                <tbody id="teacherTableBody">
+                    <tr><td>Alice Martin</td><td>90%</td><td>Libre</td><td style="color:green; font-weight:bold;">92%</td></tr>
+                    <tr><td>John Doe</td><td>45%</td><td>Libre</td><td style="color:orange; font-weight:bold;">74%</td></tr>
+                </tbody>
+            </table>
         </div>
 
-        <!-- Exercises Interface -->
-        <div class="chat-interface" id="exercises">
-            <div class="chat-header">
-                <h3>📝 Exercices guidés</h3>
-                <button class="back-btn" onclick="backToDashboard()">← Retour</button>
-            </div>
-            <div class="exercise-prompts">
-                <div class="prompt-card" onclick="selectExercise('Décrivez votre journée idéale en utilisant le futur simple.')">
-                    <h4>Le futur simple</h4>
-                    <p>Décrivez votre journée idéale en utilisant le futur simple.</p>
-                </div>
-                <div class="prompt-card" onclick="selectExercise('Racontez une histoire au passé composé avec l\'imparfait.')">
-                    <h4>Passé composé et imparfait</h4>
-                    <p>Racontez une histoire au passé composé avec l'imparfait.</p>
-                </div>
-                <div class="prompt-card" onclick="selectExercise('Écrivez une lettre formelle pour postuler à un emploi.')">
-                    <h4>Lettre formelle</h4>
-                    <p>Écrivez une lettre formelle pour postuler à un emploi.</p>
-                </div>
-                <div class="prompt-card" onclick="selectExercise('Décrivez votre ville en utilisant des adjectifs variés.')">
-                    <h4>Les adjectifs</h4>
-                    <p>Décrivez votre ville en utilisant des adjectifs variés.</p>
-                </div>
-            </div>
-            <div class="chat-messages" id="exerciseMessages" style="margin-top: 20px; display: none;">
-            </div>
-            <div class="chat-input-area" id="exerciseInputArea" style="margin-top: 20px; display: none;">
-                <input type="text" class="chat-input" id="exerciseInput" placeholder="Écrivez votre réponse..." onkeypress="handleKeyPress(event, 'exercise')">
-                <button class="send-btn" onclick="sendMessage('exercise')">Envoyer</button>
-            </div>
-        </div>
-
-        <!-- Conversation Interface -->
-        <div class="chat-interface" id="conversation">
-            <div class="chat-header">
-                <h3>💬 Conversation</h3>
-                <button class="back-btn" onclick="backToDashboard()">← Retour</button>
-            </div>
-            <div class="chat-messages" id="conversationMessages">
-                <div class="message bot">
-                    Salut! Je suis ton partenaire de conversation. Discutons en français! Comment vas-tu aujourd'hui?
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" id="conversationInput" placeholder="Tapez votre message..." onkeypress="handleKeyPress(event, 'conversation')">
-                <button class="send-btn" onclick="sendMessage('conversation')">Envoyer</button>
+        <div class="main-card hidden" id="chatArea">
+            <button onclick="backToDashboard()" class="btn" style="background:none; color:var(--aup-blue); padding:0; margin-bottom:20px;">← <span id="txt-back">Retour</span></button>
+            <div id="currentAssignmentLabel" style="margin-bottom: 10px; font-weight: bold; color: var(--aup-red);"></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area" style="display:flex; gap:10px;">
+                <input type="text" class="chat-input" id="userInput" style="flex:1; padding:15px; border:1px solid #ddd;" placeholder="...">
+                <button class="btn btn-primary" onclick="handleSend()" id="txt-send">Envoyer</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Simple login/logout functionality
+        let currentLang = 'fr';
+        let currentRole = 'student';
+        let activePrompt = "";
+
+        const translations = {
+            fr: {
+                title: "FrançaisBot", subtitle: "L'excellence dans l'apprentissage.",
+                authTitle: "Portail Étudiant", teacherAuth: "Portail Enseignant",
+                login: "Se Connecter", dashWelcome: "Tableau de Bord",
+                logout: "Déconnexion", feat1Title: "Écriture libre",
+                feat1Desc: "Perfectionnez votre style.", feat3Title: "Conversation",
+                feat3Desc: "Dialogue interactif.", back: "Retour", send: "Envoyer",
+                teacherTitle: "Analyses de la Classe", assignSuccess: "Sujet assigné avec succès !"
+            },
+            en: {
+                title: "FrenchBot", subtitle: "Excellence in learning.",
+                authTitle: "Student Portal", teacherAuth: "Teacher Portal",
+                login: "Login", dashWelcome: "Dashboard",
+                logout: "Logout", feat1Title: "Free Writing",
+                feat1Desc: "Perfect your style.", feat3Title: "Conversation",
+                feat3Desc: "Interactive dialogue.", back: "Back", send: "Send",
+                teacherTitle: "Class Analytics", assignSuccess: "Prompt assigned successfully!"
+            }
+        };
+
+        function toggleRole(role) {
+            currentRole = role;
+            document.getElementById('roleStudent').classList.toggle('active', role === 'student');
+            document.getElementById('roleTeacher').classList.toggle('active', role === 'teacher');
+            document.getElementById('txt-auth-title').innerText = role === 'student' ? translations[currentLang].authTitle : translations[currentLang].teacherAuth;
+        }
+
+        function assignPrompt() {
+            const val = document.getElementById('promptInput').value;
+            if(!val) return;
+            activePrompt = val;
+            alert(translations[currentLang].assignSuccess);
+            document.getElementById('activePromptText').innerText = val;
+            document.getElementById('promptInput').value = "";
+        }
+
         function login() {
-            document.getElementById('authSection').style.display = 'none';
-            document.getElementById('dashboard').classList.add('active');
-            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('authSection').classList.add('hidden');
+            if (currentRole === 'student') {
+                document.getElementById('studentDashboard').classList.remove('hidden');
+            } else {
+                document.getElementById('teacherDashboard').classList.remove('hidden');
+            }
         }
 
-        function register() {
-            alert('Fonctionnalité de création de compte - À implémenter avec votre backend');
-            login(); // For demo purposes
-        }
+        function logout() { location.reload(); }
 
-        function logout() {
-            document.getElementById('authSection').style.display = 'block';
-            document.getElementById('dashboard').classList.remove('active');
-            document.getElementById('userInfo').style.display = 'none';
-            backToDashboard();
-        }
-
-        // Navigation functions
-        function openFreeWriting() {
-            document.getElementById('dashboard').classList.remove('active');
-            document.getElementById('freeWriting').classList.add('active');
-        }
-
-        function openExercises() {
-            document.getElementById('dashboard').classList.remove('active');
-            document.getElementById('exercises').classList.add('active');
-        }
-
-        function openConversation() {
-            document.getElementById('dashboard').classList.remove('active');
-            document.getElementById('conversation').classList.add('active');
+        function showChat(mode) {
+            document.getElementById('studentDashboard').classList.add('hidden');
+            document.getElementById('chatArea').classList.remove('hidden');
+            const msgs = document.getElementById('chatMessages');
+            
+            if(mode === 'assignment' && activePrompt) {
+                document.getElementById('currentAssignmentLabel').innerText = "Sujet : " + activePrompt;
+                msgs.innerHTML = `<div class="message bot">Bonjour ! Pour ce devoir, vous devez : <i>${activePrompt}</i>. Je suis prêt à vous corriger.</div>`;
+            } else {
+                document.getElementById('currentAssignmentLabel').innerText = "";
+                msgs.innerHTML = `<div class="message bot">Bonjour ! Comment puis-je vous aider aujourd'hui ?</div>`;
+            }
         }
 
         function backToDashboard() {
-            document.getElementById('freeWriting').classList.remove('active');
-            document.getElementById('exercises').classList.remove('active');
-            document.getElementById('conversation').classList.remove('active');
-            document.getElementById('dashboard').classList.add('active');
-            
-            // Reset exercise view
-            document.getElementById('exerciseMessages').style.display = 'none';
-            document.getElementById('exerciseInputArea').style.display = 'none';
+            document.getElementById('chatArea').classList.add('hidden');
+            document.getElementById('studentDashboard').classList.remove('hidden');
         }
 
-        // Exercise selection
-        function selectExercise(prompt) {
-            document.getElementById('exerciseMessages').style.display = 'block';
-            document.getElementById('exerciseInputArea').style.display = 'flex';
-            
-            const messagesDiv = document.getElementById('exerciseMessages');
-            messagesDiv.innerHTML = `
-                <div class="message bot">
-                    Excellent choix! Voici votre exercice:<br><br>
-                    <strong>${prompt}</strong><br><br>
-                    Prenez votre temps et écrivez votre réponse. Je vous aiderai à corriger et à améliorer votre texte.
-                </div>
-            `;
+        function handleSend() {
+            const msg = document.getElementById('userInput').value;
+            if(!msg) return;
+            document.getElementById('chatMessages').innerHTML += `<div class="message user">${msg}</div>`;
+            document.getElementById('userInput').value = '';
         }
 
-        // Message sending
-        function sendMessage(type) {
-            const inputId = type === 'freeWriting' ? 'freeWritingInput' : 
-                           type === 'exercise' ? 'exerciseInput' : 'conversationInput';
-            const messagesId = type === 'freeWriting' ? 'freeWritingMessages' : 
-                              type === 'exercise' ? 'exerciseMessages' : 'conversationMessages';
-            
-            const input = document.getElementById(inputId);
-            const messagesDiv = document.getElementById(messagesId);
-            const message = input.value.trim();
-            
-            if (message === '') return;
-            
-            // Add user message
-            const userMsg = document.createElement('div');
-            userMsg.className = 'message user';
-            userMsg.textContent = message;
-            messagesDiv.appendChild(userMsg);
-            
-            input.value = '';
-            
-            // Simulate bot response (in real app, this would call your AI wrapper)
-            setTimeout(() => {
-                const botMsg = document.createElement('div');
-                botMsg.className = 'message bot';
-                botMsg.innerHTML = getBotResponse(message, type);
-                messagesDiv.appendChild(botMsg);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }, 1000);
-            
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        function getBotResponse(userMessage, type) {
-            // Simulated responses - replace with actual AI wrapper API call
-            const responses = {
-                freeWriting: "Très bien! J'ai remarqué quelques points à améliorer dans votre texte. Voici mes suggestions...",
-                exercise: "Bon travail! Votre texte montre une bonne compréhension. Permettez-moi de corriger quelques petites erreurs...",
-                conversation: "C'est intéressant! Pouvez-vous m'en dire plus?"
-            };
-            
-            return responses[type] || "Merci pour votre message!";
-        }
-
-        function handleKeyPress(event, type) {
-            if (event.key === 'Enter') {
-                sendMessage(type);
-            }
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.btn-lang').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            // Basic text updates
+            document.getElementById('txt-title').innerText = translations[lang].title;
+            document.getElementById('txt-auth-title').innerText = currentRole === 'student' ? translations[lang].authTitle : translations[lang].teacherAuth;
+            document.getElementById('txt-login').innerText = translations[lang].login;
         }
     </script>
 </body>

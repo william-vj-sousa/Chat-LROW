@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+
+    <nav>
+        <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        <div class="nav-links">
+            <a href="#features">À propos</a>
+            <a href="{{ url_for('login') }}" class="btn-nav btn-nav-outline">Se connecter</a>
+            <a href="{{ url_for('register') }}" class="btn-nav btn-nav-solid">Créer un compte</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <p class="hero-eyebrow">American University of Paris</p>
+        <h1>FrançaisBot</h1>
+        <p>Une plateforme d'apprentissage intelligente pour maîtriser la langue française — pour étudiants et enseignants.</p>
+        <div class="hero-cta">
+            <a href="{{ url_for('register') }}" class="btn-hero btn-hero-primary">Commencer gratuitement</a>
+            <a href="{{ url_for('login') }}" class="btn-hero btn-hero-secondary">Se connecter</a>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features">
+        <p class="section-label">Fonctionnalités</p>
+        <h2 class="section-title">Tout ce dont vous avez besoin</h2>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">✒️</span>
+                <h3>Écriture libre</h3>
+                <p>Rédigez librement et recevez des corrections instantanées sur votre style, grammaire et vocabulaire.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📍</span>
+                <h3>Devoirs assignés</h3>
+                <p>Les enseignants assignent des exercices ciblés. Les étudiants les complètent avec une aide intelligente.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💬</span>
+                <h3>Conversation interactive</h3>
+                <p>Pratiquez l'oral et l'écrit à travers des dialogues naturels adaptés à votre niveau.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>Analyses de classe</h3>
+                <p>Les enseignants suivent la progression de chaque étudiant avec des statistiques détaillées en temps réel.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section style="background: var(--aup-black); color: white; text-align: center; padding: 80px 20px;">
+        <p style="font-size:0.8em; text-transform:uppercase; letter-spacing:4px; color:var(--aup-red); margin-bottom:16px;">Rejoignez-nous</p>
+        <h2 style="font-family:'Cormorant Garamond',serif; font-size:2.8em; font-weight:300; margin-bottom:30px;">Prêt à commencer ?</h2>
+        <a href="{{ url_for('register') }}" class="btn-hero btn-hero-primary">Créer mon compte</a>
+    </section>
+
+</body>
+</html>

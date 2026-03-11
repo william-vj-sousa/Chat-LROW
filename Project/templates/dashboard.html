@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | Tableau de bord</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body style="background: var(--aup-light);">
+
+    <!-- Dashboard Navbar -->
+    <div class="dashboard-header">
+        <a href="{{ url_for('landing') }}">
+            <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        </a>
+        <div class="user-info">
+            <span>Connecté en tant que <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+
+        <!-- Welcome -->
+        <div class="dashboard-welcome">
+            <p class="eyebrow">Tableau de bord</p>
+            <h2>Bonjour, {{ username }} 👋</h2>
+        </div>
+
+        <!-- Role Toggle -->
+        <div class="role-pill">
+            <button id="roleStudent" class="active" onclick="toggleRole('student')">Étudiant</button>
+            <button id="roleTeacher" onclick="toggleRole('teacher')">Enseignant</button>
+        </div>
+
+        <!-- ── Student View ── -->
+        <div id="studentView">
+            <div class="dash-grid">
+                <div class="dash-card" onclick="showChat('writing')">
+                    <span class="icon">✒️</span>
+                    <h3>Écriture libre</h3>
+                    <p>Perfectionnez votre style et recevez des corrections.</p>
+                </div>
+                <div class="dash-card" onclick="showChat('assignment')" style="border-color: var(--aup-red);">
+                    <span class="icon">📍</span>
+                    <h3>Devoirs assignés</h3>
+                    <p id="activePromptText">Aucun devoir en attente.</p>
+                </div>
+                <div class="dash-card" onclick="showChat('chat')">
+                    <span class="icon">💬</span>
+                    <h3>Conversation</h3>
+                    <p>Dialogue interactif adapté à votre niveau.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Teacher View ── -->
+        <div id="teacherView" class="hidden">
+            <div class="stats-row">
+                <div class="stat-item"><span>Moyenne Classe</span><h4>84%</h4></div>
+                <div class="stat-item"><span>Étudiants Actifs</span><h4>24</h4></div>
+                <div class="stat-item"><span>Niveau Moyen</span><h4>B2</h4></div>
+            </div>
+
+            <div class="assign-section">
+                <h3>Assigner un nouveau sujet</h3>
+                <input type="text" id="promptInput" class="input-field"
+                    placeholder="Ex: Racontez vos dernières vacances au passé composé...">
+                <select id="studentSelect" class="input-field">
+                    <option value="all">Tous les étudiants (Section FR101)</option>
+                    <option value="alice">Alice Martin</option>
+                    <option value="john">John Doe</option>
+                </select>
+                <button class="btn btn-primary" onclick="assignPrompt()">Envoyer le Devoir</button>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Étudiant</th>
+                            <th>Progression</th>
+                            <th>Dernier Sujet</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Alice Martin</td>
+                            <td>90%</td>
+                            <td>Libre</td>
+                            <td style="color:green; font-weight:bold;">92%</td>
+                        </tr>
+                        <tr>
+                            <td>John Doe</td>
+                            <td>45%</td>
+                            <td>Libre</td>
+                            <td style="color:orange; font-weight:bold;">74%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── Chat Area ── -->
+        <div id="chatArea" class="hidden" style="margin-top: 10px;">
+            <button onclick="backToDashboard()" class="btn"
+                style="background:none; color:var(--aup-blue); padding:0; margin-bottom:18px; letter-spacing:1px;">
+                ← Retour
+            </button>
+            <div id="currentAssignmentLabel"
+                style="margin-bottom: 12px; font-weight: 600; color: var(--aup-red); font-size:0.9em;"></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="userInput"
+                    style="flex:1; padding:14px; border:1px solid var(--aup-border); font-family:'Jost',sans-serif; font-size:0.95em;"
+                    placeholder="Écrivez votre message...">
+                <button class="btn btn-primary" onclick="handleSend()">Envoyer</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../static/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | Learning Portal</title>
+    <style>
+        :root {
+            --aup-black: #050505;
+            --aup-blue: #4a69bd;
+            --aup-red: #d63031;
+            --aup-white: #ffffff;
+            --aup-gray: #f8f9fa;
+            --aup-text: #2d3436;
+            --aup-border: #e1e1e1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: all 0.2s ease-in-out; }
+
+        body {
+            font-family: 'Optima', 'Segoe UI', serif;
+            background-color: var(--aup-black);
+            color: var(--aup-text);
+            min-height: 100vh;
+        }
+
+        /* Sleek Navbar */
+        nav {
+            background: var(--aup-white);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--aup-red);
+        }
+        .logo-placeholder { height: 50px; }
+        .lang-switch { display: flex; gap: 10px; }
+        .btn-lang { background: none; border: 1px solid #ccc; padding: 5px 12px; cursor: pointer; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-lang.active { background: var(--aup-blue); color: white; border-color: var(--aup-blue); }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        header h1 { font-size: 3em; letter-spacing: 2px; margin-bottom: 10px; }
+
+        .container { max-width: 1100px; margin: -40px auto 40px; padding: 0 20px; }
+        .main-card { background: var(--aup-white); padding: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); border-radius: 0; }
+
+        /* Role Selector */
+        .role-pill { display: flex; background: #eee; padding: 4px; width: 250px; margin: 0 auto 30px; }
+        .role-pill button { flex: 1; padding: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 0.75em; text-transform: uppercase; background: none; }
+        .role-pill button.active { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        /* Dashboard Grid */
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-top: 30px; }
+        .feature-card { border: 1px solid #eee; padding: 30px; text-align: center; cursor: pointer; position: relative; }
+        .feature-card:hover { border-color: var(--aup-blue); transform: translateY(-5px); }
+        .feature-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: var(--aup-red); transform: scaleX(0); transition: 0.3s; }
+        .feature-card:hover::after { transform: scaleX(1); }
+
+        /* Assign Section */
+        .assign-section { background: var(--aup-gray); padding: 25px; margin-top: 30px; border-top: 3px solid var(--aup-red); }
+        .input-field { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; font-family: inherit; }
+
+        /* Stats & Tables */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-item { background: var(--aup-gray); padding: 20px; border-left: 4px solid var(--aup-blue); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
+        th { text-align: left; padding: 15px; background: var(--aup-gray); border-bottom: 2px solid var(--aup-red); }
+        td { padding: 15px; border-bottom: 1px solid #eee; }
+
+        /* Chat */
+        .chat-messages { height: 400px; background: #fdfdfd; border: 1px solid #eee; overflow-y: auto; padding: 20px; margin-bottom: 20px; }
+        .message { margin-bottom: 20px; max-width: 75%; padding: 15px; }
+        .message.bot { background: var(--aup-gray); border-left: 4px solid var(--aup-blue); }
+        .message.user { background: var(--aup-black); color: white; margin-left: auto; }
+
+        .btn { padding: 12px 35px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; cursor: pointer; border: none; }
+        .btn-primary { background: var(--aup-black); color: white; }
+        .btn-primary:hover { background: var(--aup-red); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <img src="aup.png" alt="AUP Logo" class="logo-placeholder">
+        <div class="lang-switch">
+            <button class="btn-lang active" onclick="setLanguage('fr')">FR</button>
+            <button class="btn-lang" onclick="setLanguage('en')">EN</button>
+        </div>
+    </nav>
+
+    <header>
+        <h1 id="txt-title">FrançaisBot</h1>
+        <p id="txt-subtitle">L'excellence dans l'apprentissage de la langue française.</p>
+    </header>
+
+    <div class="container">
+        <div class="main-card" id="authSection">
+            <div class="role-pill">
+                <button id="roleStudent" class="active" onclick="toggleRole('student')">Student</button>
+                <button id="roleTeacher" onclick="toggleRole('teacher')">Teacher</button>
+            </div>
+            <h2 id="txt-auth-title" style="text-align: center; margin-bottom: 30px;">Portail Étudiant</h2>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <input type="email" placeholder="Email institutionnel" style="width: 300px; padding: 12px; border: 1px solid #ddd;">
+                <button class="btn btn-primary" onclick="login()" id="txt-login" style="width: 300px;">Se Connecter</button>
+            </div>
+        </div>
+
+        <div class="main-card hidden" id="studentDashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 id="txt-dash-welcome">Tableau de Bord</h2>
+                <button onclick="logout()" style="background:none; border:none; color:var(--aup-red); cursor:pointer; font-weight:bold" id="txt-logout">Déconnexion</button>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" onclick="showChat('writing')">
+                    <span class="icon">✒️</span>
+                    <h3 id="txt-feat1-title">Écriture libre</h3>
+                    <p id="txt-feat1-desc">Perfectionnez votre style.</p>
+                </div>
+                <div class="feature-card" id="assignmentCard" onclick="showChat('assignment')" style="border-color: var(--aup-red);">
+                    <span class="icon">📍</span>
+                    <h3 id="txt-assignment-title">Devoirs assignés</h3>
+                    <p id="activePromptText">Aucun devoir en attente.</p>
+                </div>
+                <div class="feature-card" onclick="showChat('chat')">
+                    <span class="icon">💬</span>
+                    <h3 id="txt-feat3-title">Conversation</h3>
+                    <p id="txt-feat3-desc">Dialogue interactif.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-card hidden" id="teacherDashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 id="txt-teacher-title">Analyses de la Classe</h2>
+                <button onclick="logout()" style="background:none; border:none; color:var(--aup-red); cursor:pointer; font-weight:bold">SIGN OUT</button>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-item"><span>Moyenne Classe</span><h4>84%</h4></div>
+                <div class="stat-item"><span>Étudiants Actifs</span><h4>24</h4></div>
+                <div class="stat-item"><span>Niveau Moyen</span><h4>B2</h4></div>
+            </div>
+
+            <div class="assign-section">
+                <h3 style="margin-bottom: 15px;">Assigner un nouveau sujet</h3>
+                <input type="text" id="promptInput" class="input-field" placeholder="Ex: Racontez vos dernières vacances au passé composé...">
+                <select id="studentSelect" class="input-field">
+                    <option value="all">Tous les étudiants (Section FR101)</option>
+                    <option value="alice">Alice Martin</option>
+                    <option value="john">John Doe</option>
+                </select>
+                <button class="btn btn-primary" onclick="assignPrompt()">Envoyer le Devoir</button>
+            </div>
+
+            <table id="analyticsTable">
+                <thead>
+                    <tr><th>Étudiant</th><th>Progression</th><th>Dernier Sujet</th><th>Score</th></tr>
+                </thead>
+                <tbody id="teacherTableBody">
+                    <tr><td>Alice Martin</td><td>90%</td><td>Libre</td><td style="color:green; font-weight:bold;">92%</td></tr>
+                    <tr><td>John Doe</td><td>45%</td><td>Libre</td><td style="color:orange; font-weight:bold;">74%</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="main-card hidden" id="chatArea">
+            <button onclick="backToDashboard()" class="btn" style="background:none; color:var(--aup-blue); padding:0; margin-bottom:20px;">← <span id="txt-back">Retour</span></button>
+            <div id="currentAssignmentLabel" style="margin-bottom: 10px; font-weight: bold; color: var(--aup-red);"></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area" style="display:flex; gap:10px;">
+                <input type="text" class="chat-input" id="userInput" style="flex:1; padding:15px; border:1px solid #ddd;" placeholder="...">
+                <button class="btn btn-primary" onclick="handleSend()" id="txt-send">Envoyer</button>
+                <button class="btn btn-primary" onclick="clearChat()" style="background:var(--aup-red);">Effacer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = 'fr';
+        let currentRole = 'student';
+        let activePrompt = "";
+
+        const translations = {
+            fr: {
+                title: "FrançaisBot", subtitle: "L'excellence dans l'apprentissage.",
+                authTitle: "Portail Étudiant", teacherAuth: "Portail Enseignant",
+                login: "Se Connecter", dashWelcome: "Tableau de Bord",
+                logout: "Déconnexion", feat1Title: "Écriture libre",
+                feat1Desc: "Perfectionnez votre style.", feat3Title: "Conversation",
+                feat3Desc: "Dialogue interactif.", back: "Retour", send: "Envoyer",
+                teacherTitle: "Analyses de la Classe", assignSuccess: "Sujet assigné avec succès !"
+            },
+            en: {
+                title: "FrenchBot", subtitle: "Excellence in learning.",
+                authTitle: "Student Portal", teacherAuth: "Teacher Portal",
+                login: "Login", dashWelcome: "Dashboard",
+                logout: "Logout", feat1Title: "Free Writing",
+                feat1Desc: "Perfect your style.", feat3Title: "Conversation",
+                feat3Desc: "Interactive dialogue.", back: "Back", send: "Send",
+                teacherTitle: "Class Analytics", assignSuccess: "Prompt assigned successfully!"
+            }
+        };
+
+        function toggleRole(role) {
+            currentRole = role;
+            document.getElementById('roleStudent').classList.toggle('active', role === 'student');
+            document.getElementById('roleTeacher').classList.toggle('active', role === 'teacher');
+            document.getElementById('txt-auth-title').innerText = role === 'student' ? translations[currentLang].authTitle : translations[currentLang].teacherAuth;
+        }
+
+        function assignPrompt() {
+            const val = document.getElementById('promptInput').value;
+            if(!val) return;
+            activePrompt = val;
+            alert(translations[currentLang].assignSuccess);
+            document.getElementById('activePromptText').innerText = val;
+            document.getElementById('promptInput').value = "";
+        }
+
+        function login() {
+            document.getElementById('authSection').classList.add('hidden');
+            if (currentRole === 'student') {
+                document.getElementById('studentDashboard').classList.remove('hidden');
+            } else {
+                document.getElementById('teacherDashboard').classList.remove('hidden');
+            }
+        }
+
+        function logout() { location.reload(); }
+
+        function showChat(mode) {
+            document.getElementById('studentDashboard').classList.add('hidden');
+            document.getElementById('chatArea').classList.remove('hidden');
+            const msgs = document.getElementById('chatMessages');
+            
+            if(mode === 'assignment' && activePrompt) {
+                document.getElementById('currentAssignmentLabel').innerText = "Sujet : " + activePrompt;
+                msgs.innerHTML = `<div class="message bot">Bonjour ! Pour ce devoir, vous devez : <i>${activePrompt}</i>. Je suis prêt à vous corriger.</div>`;
+            } else {
+                document.getElementById('currentAssignmentLabel').innerText = "";
+                msgs.innerHTML = `<div class="message bot">Bonjour ! Comment puis-je vous aider aujourd'hui ?</div>`;
+            }
+        }
+
+        function backToDashboard() {
+            document.getElementById('chatArea').classList.add('hidden');
+            document.getElementById('studentDashboard').classList.remove('hidden');
+        }
+
+        function handleSend() {
+            const msg = document.getElementById('userInput').value;
+            if(!msg) return;
+            
+            // Display user message immediately
+            document.getElementById('chatMessages').innerHTML += `<div class="message user">${msg}</div>`;
+            document.getElementById('userInput').value = '';
+            
+            // Send message to Flask backend (same domain)
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: msg })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.response) {
+                    // Display the response from gbt4all
+                    document.getElementById('chatMessages').innerHTML += `<div class="message bot">${data.response}</div>`;
+                    // Auto-scroll to bottom
+                    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                } else if(data.error) {
+                    document.getElementById('chatMessages').innerHTML += `<div class="message bot" style="color:red;">Erreur: ${data.error}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('chatMessages').innerHTML += `<div class="message bot" style="color:red;">Erreur de connexion.</div>`;
+            });
+        }
+
+        function clearChat() {
+            // Clear the chat display
+            document.getElementById('chatMessages').innerHTML = `<div class="message bot">Conversation effacée. Bonjour ! Comment puis-je vous aider aujourd'hui ?</div>`;
+            
+            // Tell the backend to clear the history
+            fetch('/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .catch(error => console.error('Error clearing chat:', error));
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.btn-lang').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            // Basic text updates
+            document.getElementById('txt-title').innerText = translations[lang].title;
+            document.getElementById('txt-auth-title').innerText = currentRole === 'student' ? translations[lang].authTitle : translations[lang].teacherAuth;
+            document.getElementById('txt-login').innerText = translations[lang].login;
+        }
+    </script>
+</body>
+</html>

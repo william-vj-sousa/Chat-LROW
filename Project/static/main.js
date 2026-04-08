@@ -1,6 +1,18 @@
 /* Dashboard JavaScript */
 
 let activePrompt = "";
+let activeConversationId = null;
+
+function ensureActiveConversationId() {
+    if (activeConversationId !== null) return activeConversationId;
+
+    const chatArea = document.getElementById('chatArea');
+    if (chatArea && chatArea.dataset.conversationId) {
+        activeConversationId = Number(chatArea.dataset.conversationId);
+    }
+
+    return activeConversationId;
+}
 
 function renderMessage(role, message) {
     const cssRole = role === 'assistant' || role === 'system' ? 'bot' : 'user';
@@ -16,15 +28,24 @@ function scrollChatToBottom() {
 
 function loadChatHistory() {
     const chatMessages = document.getElementById('chatMessages');
+    const conversationId = ensureActiveConversationId();
     if (!chatMessages) return;
 
     chatMessages.innerHTML = renderMessage('assistant', 'Chargement de votre conversation...');
 
-    fetch('/chat/history')
+    const historyUrl = conversationId === null
+        ? '/chat/history'
+        : `/chat/history?conversation_id=${conversationId}`;
+
+    fetch(historyUrl)
         .then(response => response.json().then(data => ({ ok: response.ok, data })))
         .then(({ ok, data }) => {
             if (!ok) {
                 throw new Error(data.error || 'Unable to load chat history.');
+            }
+
+            if (typeof data.conversation_id === 'number') {
+                activeConversationId = data.conversation_id;
             }
 
             const messages = data.messages || [];
@@ -111,12 +132,19 @@ function handleSend() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: msg })
+        body: JSON.stringify({
+            message: msg,
+            conversation_id: ensureActiveConversationId()
+        })
     })
         .then(response => response.json().then(data => ({ ok: response.ok, data })))
         .then(({ ok, data }) => {
             if (!ok) {
                 throw new Error(data.error || 'Unable to save message.');
+            }
+
+            if (typeof data.conversation_id === 'number') {
+                activeConversationId = data.conversation_id;
             }
 
             if (data.response) {
@@ -139,6 +167,10 @@ function clearChat() {
         headers: {
             'Content-Type': 'application/json',
         }
+        ,
+        body: JSON.stringify({
+            conversation_id: ensureActiveConversationId()
+        })
     }).catch(error => {
         chatMessages.innerHTML += `<div class="message bot" style="color:red;">${error.message}</div>`;
         scrollChatToBottom();
@@ -146,6 +178,7 @@ function clearChat() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    ensureActiveConversationId();
     const userInput = document.getElementById('userInput');
     if (userInput) {
         userInput.addEventListener('keydown', (e) => {

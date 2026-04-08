@@ -8,6 +8,11 @@ import os
 from datetime import datetime
 import requests
 
+try:
+    from pyngrok import ngrok
+except ImportError:
+    ngrok = None
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -28,12 +33,18 @@ SYSTEM_PROMPT = (
     "and make suggestions about tone."
 )
 
+NGROK_ENABLED = os.environ.get('ENABLE_NGROK', 'false').lower() == 'true'
+NGROK_AUTHTOKEN = os.environ.get('NGROK_AUTHTOKEN')
+NGROK_DOMAIN = os.environ.get('NGROK_DOMAIN')
+PUBLIC_URL = None
+
 
 
 # -- Chat History -- 
 class ChatHistory(db.Model): 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
     role = db.Column(db.String(20), nullable=False)
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -43,6 +54,7 @@ class Conversation(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    messages = db.relationship('ChatHistory', backref='conversation', lazy=True)
 
 # ── User Model ──
 class User(UserMixin, db.Model):
@@ -51,6 +63,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
     chats = db.relationship('ChatHistory', backref='user', lazy=True)
+    conversations = db.relationship('Conversation', backref='user', lazy=True)
 
 
 def ensure_chat_history_schema():
@@ -59,16 +72,93 @@ def ensure_chat_history_schema():
         return
 
     columns = {column['name'] for column in inspector.get_columns('chat_history')}
-    if 'created_at' in columns:
-        return
+    if 'created_at' not in columns:
+        db.session.execute(text("ALTER TABLE chat_history ADD COLUMN created_at DATETIME"))
 
-    db.session.execute(text("ALTER TABLE chat_history ADD COLUMN created_at DATETIME"))
+        if 'create_at' in columns:
+            db.session.execute(text("UPDATE chat_history SET created_at = create_at WHERE create_at IS NOT NULL"))
 
-    if 'create_at' in columns:
-        db.session.execute(text("UPDATE chat_history SET created_at = create_at WHERE create_at IS NOT NULL"))
+        db.session.execute(text("UPDATE chat_history SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"))
 
-    db.session.execute(text("UPDATE chat_history SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"))
+    if 'conversation_id' not in columns:
+        db.session.execute(text("ALTER TABLE chat_history ADD COLUMN conversation_id INTEGER"))
+
+    users_with_missing_conversations = db.session.execute(
+        text("SELECT DISTINCT user_id FROM chat_history WHERE conversation_id IS NULL")
+    ).fetchall()
+
+    for row in users_with_missing_conversations:
+        conversation = (
+            Conversation.query
+            .filter_by(user_id=row.user_id)
+            .order_by(Conversation.created_at.asc(), Conversation.id.asc())
+            .first()
+        )
+        if conversation is None:
+            conversation = Conversation(
+                user_id=row.user_id,
+                title="Recovered conversation"
+            )
+            db.session.add(conversation)
+            db.session.flush()
+
+        db.session.execute(
+            text("UPDATE chat_history SET conversation_id = :conversation_id WHERE user_id = :user_id AND conversation_id IS NULL"),
+            {"conversation_id": conversation.id, "user_id": row.user_id}
+        )
+
     db.session.commit()
+
+
+def get_or_create_active_conversation(user):
+    conversation = (
+        Conversation.query
+        .filter_by(user_id=user.id)
+        .order_by(Conversation.created_at.desc(), Conversation.id.desc())
+        .first()
+    )
+    if conversation is None:
+        conversation = Conversation(
+            user_id=user.id,
+            title=f"{user.username} main conversation"
+        )
+        db.session.add(conversation)
+        db.session.commit()
+    return conversation
+
+
+def resolve_conversation_for_user(user, conversation_id=None):
+    if conversation_id is not None:
+        conversation = Conversation.query.filter_by(
+            id=conversation_id,
+            user_id=user.id
+        ).first()
+        if conversation is not None:
+            return conversation
+    return get_or_create_active_conversation(user)
+
+
+def start_ngrok_tunnel(port):
+    global PUBLIC_URL
+
+    if not NGROK_ENABLED:
+        return None
+
+    if ngrok is None:
+        print("[ngrok] pyngrok is not installed. Run `pip install -r requirements.txt` in Project.")
+        return None
+
+    if NGROK_AUTHTOKEN:
+        ngrok.set_auth_token(NGROK_AUTHTOKEN)
+
+    tunnel_options = {"addr": port, "proto": "http"}
+    if NGROK_DOMAIN:
+        tunnel_options["domain"] = NGROK_DOMAIN
+
+    tunnel = ngrok.connect(**tunnel_options)
+    PUBLIC_URL = tunnel.public_url
+    print(f"[ngrok] Public URL: {PUBLIC_URL}")
+    return PUBLIC_URL
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -127,22 +217,34 @@ def register():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', username=current_user.username)
+    active_conversation = get_or_create_active_conversation(current_user)
+    return render_template(
+        'dashboard.html',
+        username=current_user.username,
+        active_conversation_id=active_conversation.id
+    )
 
 # ── Logout ──
 @app.route('/chat/history', methods=['GET'])
 @login_required
 def chat_history():
+    requested_conversation_id = request.args.get('conversation_id', type=int)
+    conversation = resolve_conversation_for_user(current_user, requested_conversation_id)
+
     saved_messages = (
         ChatHistory.query
-        .filter_by(user_id=current_user.id)
+        .filter_by(user_id=current_user.id, conversation_id=conversation.id)
         .order_by(ChatHistory.created_at.asc(), ChatHistory.id.asc())
         .all()
     )
 
-    print(f"[chat_history] user_id={current_user.id} email={current_user.email} messages={len(saved_messages)}")
+    print(
+        f"[chat_history] user_id={current_user.id} "
+        f"conversation_id={conversation.id} email={current_user.email} messages={len(saved_messages)}"
+    )
 
     return jsonify({
+        "conversation_id": conversation.id,
         "messages": [
             {
                 "role": message.role,
@@ -158,12 +260,15 @@ def chat_history():
 def chat():
     data = request.get_json(silent=True) or {}
     user_message = (data.get('message') or '').strip()
+    requested_conversation_id = data.get('conversation_id')
+    conversation = resolve_conversation_for_user(current_user, requested_conversation_id)
 
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
 
     user_chat = ChatHistory(
         user_id=current_user.id,
+        conversation_id=conversation.id,
         role="user",
         message=user_message
     )
@@ -172,12 +277,15 @@ def chat():
 
     prior_messages = (
         ChatHistory.query
-        .filter_by(user_id=current_user.id)
+        .filter_by(user_id=current_user.id, conversation_id=conversation.id)
         .order_by(ChatHistory.created_at.asc(), ChatHistory.id.asc())
         .all()
     )
 
-    print(f"[chat] user_id={current_user.id} email={current_user.email} loaded_messages={len(prior_messages)}")
+    print(
+        f"[chat] user_id={current_user.id} conversation_id={conversation.id} "
+        f"email={current_user.email} loaded_messages={len(prior_messages)}"
+    )
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     for chat_message in prior_messages:
@@ -206,13 +314,14 @@ def chat():
 
         assistant_chat = ChatHistory(
             user_id=current_user.id,
+            conversation_id=conversation.id,
             role="assistant",
             message=reply
         )
         db.session.add(assistant_chat)
         db.session.commit()
 
-        return jsonify({"response": reply})
+        return jsonify({"response": reply, "conversation_id": conversation.id})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -221,23 +330,34 @@ def chat():
 @app.route('/reset', methods=['POST'])
 @login_required
 def reset():
-    ChatHistory.query.filter_by(user_id=current_user.id).delete()
+    data = request.get_json(silent=True) or {}
+    requested_conversation_id = data.get('conversation_id')
+    conversation = resolve_conversation_for_user(current_user, requested_conversation_id)
+
+    ChatHistory.query.filter_by(
+        user_id=current_user.id,
+        conversation_id=conversation.id
+    ).delete()
     db.session.commit()
-    return jsonify({"status": "Conversation cleared"})
+    return jsonify({"status": "Conversation cleared", "conversation_id": conversation.id})
 
 
 @app.route('/chat/debug', methods=['GET'])
 @login_required
 def chat_debug():
+    requested_conversation_id = request.args.get('conversation_id', type=int)
+    conversation = resolve_conversation_for_user(current_user, requested_conversation_id)
+
     saved_messages = (
         ChatHistory.query
-        .filter_by(user_id=current_user.id)
+        .filter_by(user_id=current_user.id, conversation_id=conversation.id)
         .order_by(ChatHistory.created_at.asc(), ChatHistory.id.asc())
         .all()
     )
 
     return jsonify({
         "user_id": current_user.id,
+        "conversation_id": conversation.id,
         "email": current_user.email,
         "username": current_user.username,
         "message_count": len(saved_messages),
@@ -264,4 +384,6 @@ with app.app_context():
     ensure_chat_history_schema()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    start_ngrok_tunnel(port)
+    app.run(host='0.0.0.0', port=port, debug=True)

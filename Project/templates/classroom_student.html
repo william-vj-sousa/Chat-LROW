@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | {{ classroom.name }}</title>
+    <link rel="stylesheet" href="../../static/styles.css">
+</head>
+<body style="background: var(--aup-light);">
+
+    <div class="dashboard-header">
+        <a href="{{ url_for('landing') }}">
+            <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        </a>
+        <div class="user-info">
+            <span class="role-badge role-badge-student">Étudiant</span>
+            <a href="{{ url_for('dashboard') }}" class="btn-logout" style="border-color:var(--aup-blue); color:var(--aup-blue);">← Mes classes</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-welcome">
+            <p class="eyebrow">{{ classroom.name }}</p>
+            <h2>Espace de travail 📖</h2>
+        </div>
+
+        <!-- Active assignment banner -->
+        {% if classroom.active_prompt %}
+        <div style="background:#fff0f0; border-left:4px solid var(--aup-red); padding:16px 20px; margin-bottom:24px;">
+            <p style="font-size:0.72em; text-transform:uppercase; letter-spacing:2px; color:var(--aup-red); margin-bottom:4px;">📍 Devoir assigné</p>
+            <p style="font-size:0.95em; font-weight:500;">{{ classroom.active_prompt }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Mode cards -->
+        <div id="modeView">
+            <div class="dash-grid">
+                {% if classroom.active_prompt %}
+                <div class="dash-card" onclick="showChat('assignment')" style="border-color: var(--aup-red);">
+                    <span class="icon">📍</span>
+                    <h3>Faire le devoir</h3>
+                    <p>{{ classroom.active_prompt[:80] }}{% if classroom.active_prompt|length > 80 %}...{% endif %}</p>
+                </div>
+                {% endif %}
+                <div class="dash-card" onclick="showChat('writing')">
+                    <span class="icon">✒️</span>
+                    <h3>Écriture libre</h3>
+                    <p>Pratiquez librement et recevez des corrections.</p>
+                </div>
+                <div class="dash-card" onclick="showChat('chat')">
+                    <span class="icon">💬</span>
+                    <h3>Conversation</h3>
+                    <p>Dialogue interactif adapté à votre niveau.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chatArea" class="hidden" style="margin-top: 10px;" data-conversation-id="{{ active_conversation_id }}">
+            <button onclick="backToModes()" class="btn"
+                style="background:none; color:var(--aup-blue); padding:0; margin-bottom:18px; letter-spacing:1px;">
+                ← Retour
+            </button>
+            <div id="currentAssignmentLabel"
+                style="margin-bottom: 12px; font-weight: 600; color: var(--aup-red); font-size:0.9em;"></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="userInput"
+                    style="flex:1; padding:14px; border:1px solid var(--aup-border); font-family:'Jost',sans-serif; font-size:0.95em;"
+                    placeholder="Écrivez votre message...">
+                <button class="btn btn-primary" onclick="handleSend()">Envoyer</button>
+                <button class="btn btn-primary" onclick="clearChat()" style="background:var(--aup-red);">Effacer</button>
+            </div>
+        </div>
+
+    </div>
+
+    <style>
+        .role-badge { padding: 4px 12px; font-size: 0.72em; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+        .role-badge-student { background: #e8f4fd; color: var(--aup-blue); border: 1px solid var(--aup-blue); }
+    </style>
+
+    <script>
+        const ACTIVE_PROMPT = {{ classroom.active_prompt | tojson }};
+    </script>
+    <script src="../../static/main.js"></script>
+    <script>
+        function showChat(mode) {
+            document.getElementById('modeView').classList.add('hidden');
+            document.getElementById('chatArea').classList.remove('hidden');
+
+            const msgs = document.getElementById('chatMessages');
+            const label = document.getElementById('currentAssignmentLabel');
+
+            if (mode === 'assignment' && ACTIVE_PROMPT) {
+                label.innerText = "Sujet : " + ACTIVE_PROMPT;
+                msgs.innerHTML = renderMessage('assistant', `Bonjour ! Pour ce devoir, vous devez : <i>${ACTIVE_PROMPT}</i>. Je suis prêt à vous corriger.`);
+                scrollChatToBottom();
+            } else {
+                label.innerText = "";
+                loadChatHistory();
+            }
+        }
+
+        function backToModes() {
+            document.getElementById('chatArea').classList.add('hidden');
+            document.getElementById('modeView').classList.remove('hidden');
+        }
+    </script>
+
+</body>
+</html>

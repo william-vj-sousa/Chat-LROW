@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | {{ classroom.name }}</title>
+    <link rel="stylesheet" href="../../static/styles.css">
+</head>
+<body style="background: var(--aup-light);">
+
+    <div class="dashboard-header">
+        <a href="{{ url_for('landing') }}">
+            <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        </a>
+        <div class="user-info">
+            <span class="role-badge role-badge-teacher">Enseignant</span>
+            <a href="{{ url_for('dashboard') }}" class="btn-logout" style="border-color:var(--aup-blue); color:var(--aup-blue);">← Mes classes</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-welcome">
+            <p class="eyebrow">Gestion de la classe</p>
+            <h2>{{ classroom.name }}</h2>
+            {% if classroom.description %}
+            <p style="color:#888; font-size:0.9em; margin-top:4px;">{{ classroom.description }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Code + stats row -->
+        <div style="display:flex; gap:18px; margin-bottom:28px; flex-wrap:wrap;">
+            <div class="stat-item" style="border-left-color:var(--aup-blue); flex:1; min-width:160px;">
+                <span>Code de la classe</span>
+                <h4 style="font-size:1.6em; letter-spacing:4px; color:var(--aup-blue);">{{ classroom.join_code }}</h4>
+            </div>
+            <div class="stat-item" style="flex:1; min-width:160px;">
+                <span>Étudiants inscrits</span>
+                <h4>{{ students|length }}</h4>
+            </div>
+            <div class="stat-item" style="border-left-color:var(--aup-red); flex:1; min-width:160px;">
+                <span>Devoir actif</span>
+                <h4 style="font-size:0.95em; color:{% if classroom.active_prompt %}var(--aup-red){% else %}#aaa{% endif %};">
+                    {% if classroom.active_prompt %}Oui{% else %}Aucun{% endif %}
+                </h4>
+            </div>
+        </div>
+
+        <!-- Assign prompt -->
+        <div class="assign-section">
+            <h3>Assigner un devoir</h3>
+            {% if classroom.active_prompt %}
+            <div style="background:#fff0f0; border-left:4px solid var(--aup-red); padding:12px 16px; margin-bottom:16px; font-size:0.88em;">
+                <strong>Devoir actuel :</strong> {{ classroom.active_prompt }}
+            </div>
+            {% endif %}
+            <input type="text" id="promptInput" class="input-field"
+                placeholder="Ex: Racontez vos dernières vacances au passé composé..."
+                value="{{ classroom.active_prompt or '' }}">
+            <div id="assignMsg" style="font-size:0.82em; margin-bottom:10px; display:none;"></div>
+            <button class="btn btn-primary" onclick="assignPrompt()">Envoyer le devoir à tous</button>
+        </div>
+
+        <!-- Student table -->
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Étudiant</th>
+                        <th>Email</th>
+                        <th>Inscrit le</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if students %}
+                        {% for student in students %}
+                        <tr>
+                            <td><strong>{{ student.username }}</strong></td>
+                            <td style="color:#888;">{{ student.email }}</td>
+                            <td style="color:#aaa; font-size:0.85em;">
+                                {% for m in classroom.memberships %}
+                                    {% if m.student_id == student.id %}
+                                        {{ m.joined_at.strftime('%d/%m/%Y') }}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3" style="text-align:center; color:#aaa; padding:30px;">
+                                Aucun étudiant inscrit. Partagez le code <strong style="color:var(--aup-blue); letter-spacing:2px;">{{ classroom.join_code }}</strong> avec vos étudiants.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <style>
+        .role-badge { padding: 4px 12px; font-size: 0.72em; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+        .role-badge-teacher { background: #fff0f0; color: var(--aup-red); border: 1px solid var(--aup-red); }
+    </style>
+
+    <script>
+        const CLASSROOM_ID = {{ classroom.id }};
+
+        function assignPrompt() {
+            const prompt = document.getElementById('promptInput').value.trim();
+            const msg = document.getElementById('assignMsg');
+
+            if (!prompt) {
+                msg.style.color = 'var(--aup-red)';
+                msg.textContent = 'Le sujet ne peut pas être vide.';
+                msg.style.display = 'block';
+                return;
+            }
+
+            fetch(`/classroom/${CLASSROOM_ID}/assign`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            })
+            .then(r => r.json().then(d => ({ ok: r.ok, d })))
+            .then(({ ok, d }) => {
+                if (ok) {
+                    msg.style.color = 'green';
+                    msg.textContent = '✓ Devoir assigné avec succès !';
+                    msg.style.display = 'block';
+                    setTimeout(() => window.location.reload(), 1200);
+                } else {
+                    msg.style.color = 'var(--aup-red)';
+                    msg.textContent = d.error || 'Erreur inconnue.';
+                    msg.style.display = 'block';
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

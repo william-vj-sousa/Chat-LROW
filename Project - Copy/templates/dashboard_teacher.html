@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | Tableau de bord Enseignant</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body style="background: var(--aup-light);">
+
+    <div class="dashboard-header">
+        <a href="{{ url_for('landing') }}">
+            <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        </a>
+        <div class="user-info">
+            <span class="role-badge role-badge-teacher">Enseignant</span>
+            <span>Connecté en tant que <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-welcome">
+            <p class="eyebrow">Tableau de bord enseignant</p>
+            <h2>Bonjour, {{ username }} 👋</h2>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row" style="margin-bottom:32px;">
+            <div class="stat-item">
+                <span>Classes créées</span>
+                <h4>{{ classrooms|length }}</h4>
+            </div>
+            <div class="stat-item">
+                <span>Étudiants inscrits</span>
+                <h4>{% set total = namespace(n=0) %}{% for c in classrooms %}{% set total.n = total.n + c.memberships|length %}{% endfor %}{{ total.n }}</h4>
+            </div>
+            <div class="stat-item" style="border-left-color: var(--aup-red);">
+                <span>Devoirs actifs</span>
+                <h4>{{ classrooms|selectattr('active_prompt')|list|length }}</h4>
+            </div>
+        </div>
+
+        <!-- My Classrooms -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <p style="font-size:0.73em; text-transform:uppercase; letter-spacing:3px; color:var(--aup-red);">Mes Classes</p>
+            <button class="btn btn-primary" onclick="showCreateModal()" style="padding:8px 20px; font-size:0.75em;">+ Nouvelle classe</button>
+        </div>
+
+        {% if classrooms %}
+        <div class="dash-grid">
+            {% for classroom in classrooms %}
+            <div class="dash-card" onclick="window.location.href='{{ url_for('classroom_detail', classroom_id=classroom.id) }}'">
+                <span class="icon">🏫</span>
+                <h3>{{ classroom.name }}</h3>
+                <p>{{ classroom.description or 'Aucune description.' }}</p>
+                <div style="margin-top:14px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <span style="background:#f0f4ff; color:var(--aup-blue); padding:5px 14px; font-size:0.75em; font-weight:700; letter-spacing:3px; border:1px solid var(--aup-blue);">
+                        {{ classroom.join_code }}
+                    </span>
+                    <span style="font-size:0.78em; color:#999;">{{ classroom.memberships|length }} étudiant(s)</span>
+                </div>
+                {% if classroom.active_prompt %}
+                <div style="margin-top:10px; padding:8px; background:#fff0f0; border-left:3px solid var(--aup-red); font-size:0.78em; color:var(--aup-red); text-align:left;">
+                    📍 Devoir actif
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="background:white; border:1px dashed var(--aup-border); padding:50px; text-align:center; color:#aaa;">
+            <span style="font-size:2.5em; display:block; margin-bottom:12px;">🏫</span>
+            <p style="font-size:1em;">Vous n'avez pas encore de classe.</p>
+            <p style="font-size:0.85em; margin-top:6px; margin-bottom:20px;">Créez votre première classe et partagez le code avec vos étudiants.</p>
+            <button class="btn btn-primary" onclick="showCreateModal()">Créer ma première classe</button>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Create Classroom Modal -->
+    <div id="createModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.6em; font-weight:400; margin-bottom:8px;">Nouvelle classe</h3>
+            <p style="font-size:0.85em; color:#888; margin-bottom:20px;">Un code unique sera généré automatiquement.</p>
+            <div class="form-group">
+                <label>Nom de la classe</label>
+                <input type="text" id="classroomName" class="input-field" placeholder="Ex: Français intermédiaire B1">
+            </div>
+            <div class="form-group">
+                <label>Description (optionnelle)</label>
+                <input type="text" id="classroomDesc" class="input-field" placeholder="Ex: Cours du mardi soir">
+            </div>
+            <div id="createError" style="color:var(--aup-red); font-size:0.82em; margin-bottom:12px; display:none;"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" onclick="createClassroom()" style="flex:1;">Créer la classe</button>
+                <button class="btn" onclick="hideCreateModal()" style="flex:1; background:#eee; color:#555;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .role-badge {
+            padding: 4px 12px;
+            font-size: 0.72em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        .role-badge-teacher {
+            background: #fff0f0;
+            color: var(--aup-red);
+            border: 1px solid var(--aup-red);
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-card {
+            background: white;
+            padding: 40px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+        }
+    </style>
+
+    <script>
+        function showCreateModal() {
+            document.getElementById('createModal').classList.remove('hidden');
+            document.getElementById('classroomName').focus();
+        }
+        function hideCreateModal() {
+            document.getElementById('createModal').classList.add('hidden');
+            document.getElementById('classroomName').value = '';
+            document.getElementById('classroomDesc').value = '';
+            document.getElementById('createError').style.display = 'none';
+        }
+        function createClassroom() {
+            const name = document.getElementById('classroomName').value.trim();
+            const description = document.getElementById('classroomDesc').value.trim();
+            const errorDiv = document.getElementById('createError');
+
+            if (!name) {
+                errorDiv.textContent = 'Le nom est requis.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            fetch('/classroom/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description })
+            })
+            .then(r => r.json().then(d => ({ ok: r.ok, d })))
+            .then(({ ok, d }) => {
+                if (!ok) {
+                    errorDiv.textContent = d.error || 'Erreur inconnue.';
+                    errorDiv.style.display = 'block';
+                } else {
+                    hideCreateModal();
+                    window.location.reload();
+                }
+            })
+            .catch(() => {
+                errorDiv.textContent = 'Erreur réseau.';
+                errorDiv.style.display = 'block';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('classroomName')?.addEventListener('keydown', e => {
+                if (e.key === 'Enter') createClassroom();
+            });
+        });
+    </script>
+
+</body>
+</html>

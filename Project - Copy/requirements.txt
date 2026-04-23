@@ -1,0 +1,7 @@
+flask
+flask-login
+flask-bcrypt
+flask-sqlalchemy
+python-dotenv
+requests
+pyngrok

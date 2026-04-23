@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | {{ assignment.title }}</title>
+    <link rel="stylesheet" href="../../static/styles.css">
+</head>
+<body style="background: var(--aup-light);">
+
+    <div class="dashboard-header">
+        <a href="{{ url_for('landing') }}">
+            <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        </a>
+        <div class="user-info">
+            <span class="role-badge role-badge-student">Étudiant</span>
+            <a href="{{ url_for('classroom_detail', classroom_id=classroom.id) }}" class="btn-logout" style="border-color:var(--aup-blue); color:var(--aup-blue);">← Retour à la classe</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+
+        <!-- Assignment header -->
+        <div style="background:white; border-left:4px solid var(--aup-red); padding:24px 28px; margin-bottom:24px; border: 1px solid var(--aup-border); border-left-width:4px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap;">
+                <div style="flex:1;">
+                    <p style="font-size:0.72em; text-transform:uppercase; letter-spacing:3px; color:var(--aup-red); margin-bottom:6px;">{{ classroom.name }}</p>
+                    <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.8em; font-weight:300; margin-bottom:10px;">{{ assignment.title }}</h2>
+                    <p style="font-size:0.9em; color:#555; line-height:1.7;">{{ assignment.instructions }}</p>
+                </div>
+                <div style="text-align:right; flex-shrink:0;">
+                    <p style="font-size:0.72em; text-transform:uppercase; letter-spacing:2px; color:#aaa; margin-bottom:4px;">Date limite</p>
+                    <p style="font-size:0.9em; font-weight:600; color:{% if overdue %}var(--aup-red){% else %}var(--aup-text){% endif %};">
+                        {{ assignment.deadline.strftime('%d/%m/%Y') }}
+                    </p>
+                    <p style="font-size:0.82em; color:#aaa;">{{ assignment.deadline.strftime('%H:%M') }}</p>
+                    {% if overdue %}
+                    <span style="font-size:0.72em; color:var(--aup-red); font-weight:600;">EXPIRÉ</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Submitted banner -->
+        {% if submission.status == 'submitted' %}
+        <div style="background:#e8f8e8; border:1px solid green; border-left:4px solid green; padding:14px 20px; margin-bottom:20px; display:flex; align-items:center; gap:12px;">
+            <span style="font-size:1.4em;">✅</span>
+            <div>
+                <p style="font-weight:600; color:green; font-size:0.9em;">Devoir rendu</p>
+                {% if submission.submitted_at %}
+                <p style="font-size:0.8em; color:#555;">Soumis le {{ submission.submitted_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Chat area -->
+        <p style="font-size:0.73em; text-transform:uppercase; letter-spacing:3px; color:var(--aup-red); margin-bottom:14px;">Travaillez avec l'assistant</p>
+
+        <div style="background:white; border:1px solid var(--aup-border); padding:20px; margin-bottom:14px;">
+            <div class="chat-messages" id="chatMessages" style="height:420px;"></div>
+            <div style="display:flex; gap:10px; margin-top:14px;">
+                <input type="text" id="userInput"
+                    style="flex:1; padding:14px; border:1px solid var(--aup-border); font-family:'Jost',sans-serif; font-size:0.95em;"
+                    placeholder="Écrivez votre réponse ou posez une question…"
+                    {% if submission.status == 'submitted' %}disabled{% endif %}>
+                <button class="btn btn-primary" onclick="handleSend()"
+                    {% if submission.status == 'submitted' %}disabled style="opacity:0.5; cursor:not-allowed;"{% endif %}>
+                    Envoyer
+                </button>
+            </div>
+        </div>
+
+        <!-- Submit button -->
+        {% if submission.status != 'submitted' %}
+        <div style="display:flex; justify-content:flex-end; gap:12px; align-items:center;">
+            <p style="font-size:0.82em; color:#aaa;">Quand vous avez terminé, soumettez votre devoir.</p>
+            <button class="btn btn-primary" id="submitBtn" onclick="submitAssignment()"
+                style="background:green; padding:12px 32px;">
+                ✓ Rendre le devoir
+            </button>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Confirm submit modal -->
+    <div id="submitModal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width:420px; text-align:center;">
+            <span style="font-size:2.5em; display:block; margin-bottom:12px;">📬</span>
+            <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.5em; font-weight:400; margin-bottom:8px;">Rendre le devoir ?</h3>
+            <p style="font-size:0.85em; color:#888; margin-bottom:24px;">Une fois soumis, vous ne pourrez plus modifier vos réponses.</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" onclick="confirmSubmit()" style="flex:1; background:green;">Confirmer</button>
+                <button class="btn" onclick="hideSubmitModal()" style="flex:1; background:#eee; color:#555;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .role-badge { padding: 4px 12px; font-size: 0.72em; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+        .role-badge-student { background: #e8f4fd; color: var(--aup-blue); border: 1px solid var(--aup-blue); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-card { background: white; padding: 40px; width: 100%; max-width: 460px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); }
+    </style>
+
+    <script>
+        const ASSIGNMENT_ID = {{ assignment.id }};
+        const CONVERSATION_ID = {{ submission.conversation_id or 'null' }};
+        const IS_SUBMITTED = {{ 'true' if submission.status == 'submitted' else 'false' }};
+
+        // ── Minimal chat functions (inline, no dependency on main.js role toggles) ──
+        let activeConversationId = CONVERSATION_ID;
+
+        function renderMessage(role, message) {
+            const cssRole = role === 'assistant' || role === 'system' ? 'bot' : 'user';
+            return `<div class="message ${cssRole}">${message}</div>`;
+        }
+
+        function scrollChatToBottom() {
+            const el = document.getElementById('chatMessages');
+            if (el) el.scrollTop = el.scrollHeight;
+        }
+
+        function loadChatHistory() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = renderMessage('assistant', 'Chargement…');
+
+            const url = activeConversationId
+                ? `/chat/history?conversation_id=${activeConversationId}`
+                : '/chat/history';
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.conversation_id) activeConversationId = data.conversation_id;
+                    const msgs = data.messages || [];
+                    if (msgs.length === 0) {
+                        chatMessages.innerHTML = renderMessage('assistant',
+                            `Bonjour ! Pour ce devoir, voici votre sujet : <br><br><em>{{ assignment.instructions }}</em><br><br>Commencez à écrire et je vous aiderai et corrigerai au fur et à mesure.`
+                        );
+                    } else {
+                        chatMessages.innerHTML = msgs.map(m => renderMessage(m.role, m.message)).join('');
+                    }
+                    scrollChatToBottom();
+                })
+                .catch(() => {
+                    chatMessages.innerHTML = renderMessage('assistant',
+                        `Bonjour ! Voici votre sujet : <em>{{ assignment.instructions }}</em>`
+                    );
+                });
+        }
+
+        function handleSend() {
+            if (IS_SUBMITTED) return;
+            const input = document.getElementById('userInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML += renderMessage('user', msg);
+            scrollChatToBottom();
+            input.value = '';
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg, conversation_id: activeConversationId })
+            })
+            .then(r => r.json().then(d => ({ ok: r.ok, d })))
+            .then(({ ok, d }) => {
+                if (!ok) throw new Error(d.error || 'Erreur');
+                if (d.conversation_id) activeConversationId = d.conversation_id;
+                if (d.response) {
+                    chatMessages.innerHTML += renderMessage('assistant', d.response);
+                    scrollChatToBottom();
+                }
+            })
+            .catch(err => {
+                chatMessages.innerHTML += `<div class="message bot" style="color:red;">${err.message}</div>`;
+                scrollChatToBottom();
+            });
+        }
+
+        function submitAssignment() {
+            document.getElementById('submitModal').classList.remove('hidden');
+        }
+
+        function hideSubmitModal() {
+            document.getElementById('submitModal').classList.add('hidden');
+        }
+
+        function confirmSubmit() {
+            fetch(`/assignment/${ASSIGNMENT_ID}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json().then(d => ({ ok: r.ok, d })))
+            .then(({ ok, d }) => {
+                if (ok) {
+                    window.location.reload();
+                } else {
+                    hideSubmitModal();
+                    alert(d.error || 'Erreur lors de la soumission.');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadChatHistory();
+            document.getElementById('userInput')?.addEventListener('keydown', e => {
+                if (e.key === 'Enter') handleSend();
+            });
+        });
+    </script>
+
+</body>
+</html>

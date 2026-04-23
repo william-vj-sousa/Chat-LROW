@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | Tableau de bord Étudiant</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body style="background: var(--aup-light);">
+
+    <div class="dashboard-header">
+        <a href="{{ url_for('landing') }}">
+            <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        </a>
+        <div class="user-info">
+            <span class="role-badge role-badge-student">Étudiant</span>
+            <span>Connecté en tant que <strong>{{ username }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-welcome">
+            <p class="eyebrow">Tableau de bord étudiant</p>
+            <h2>Bonjour, {{ username }} 👋</h2>
+        </div>
+
+        <!-- Main student view -->
+        <div id="mainView">
+
+            <!-- Practice cards -->
+            <p style="font-size:0.73em; text-transform:uppercase; letter-spacing:3px; color:var(--aup-red); margin-bottom:14px;">Pratiquer</p>
+            <div class="dash-grid" style="margin-bottom: 32px;">
+                <div class="dash-card" onclick="showChat('writing')">
+                    <span class="icon">✒️</span>
+                    <h3>Écriture libre</h3>
+                    <p>Perfectionnez votre style et recevez des corrections.</p>
+                </div>
+                <div class="dash-card" onclick="showChat('chat')">
+                    <span class="icon">💬</span>
+                    <h3>Conversation</h3>
+                    <p>Dialogue interactif adapté à votre niveau.</p>
+                </div>
+            </div>
+
+            <!-- Classrooms -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                <p style="font-size:0.73em; text-transform:uppercase; letter-spacing:3px; color:var(--aup-red);">Mes Classes</p>
+                <button class="btn btn-primary" onclick="showJoinModal()" style="padding:8px 20px; font-size:0.75em;">+ Rejoindre une classe</button>
+            </div>
+
+            {% if classrooms %}
+            <div class="dash-grid">
+                {% for classroom in classrooms %}
+                <div class="dash-card" onclick="window.location.href='{{ url_for('classroom_detail', classroom_id=classroom.id) }}'">
+                    <span class="icon">🏫</span>
+                    <h3>{{ classroom.name }}</h3>
+                    <p>{{ classroom.description or 'Classe de français' }}</p>
+                    {% if classroom.active_prompt %}
+                    <div style="margin-top:10px; padding:8px; background:#fff0f0; border-left:3px solid var(--aup-red); font-size:0.78em; color:var(--aup-red); text-align:left;">
+                        📍 Devoir en attente
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="background:white; border:1px dashed var(--aup-border); padding:40px; text-align:center; color:#aaa;">
+                <span style="font-size:2em; display:block; margin-bottom:10px;">🏫</span>
+                <p>Vous n'êtes inscrit dans aucune classe.</p>
+                <p style="font-size:0.85em; margin-top:6px;">Demandez le code à votre enseignant et rejoignez une classe.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chatArea" class="hidden" style="margin-top: 10px;" data-conversation-id="{{ active_conversation_id }}">
+            <button onclick="backToDashboard()" class="btn"
+                style="background:none; color:var(--aup-blue); padding:0; margin-bottom:18px; letter-spacing:1px;">
+                ← Retour
+            </button>
+            <div id="currentAssignmentLabel"
+                style="margin-bottom: 12px; font-weight: 600; color: var(--aup-red); font-size:0.9em;"></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="userInput"
+                    style="flex:1; padding:14px; border:1px solid var(--aup-border); font-family:'Jost',sans-serif; font-size:0.95em;"
+                    placeholder="Écrivez votre message...">
+                <button class="btn btn-primary" onclick="handleSend()">Envoyer</button>
+                <button class="btn btn-primary" onclick="clearChat()" style="background:var(--aup-red);">Effacer</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Join Classroom Modal -->
+    <div id="joinModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.6em; font-weight:400; margin-bottom:8px;">Rejoindre une classe</h3>
+            <p style="font-size:0.85em; color:#888; margin-bottom:20px;">Entrez le code fourni par votre enseignant.</p>
+            <input type="text" id="joinCodeInput" class="input-field" placeholder="Ex: AB12CD" style="text-transform:uppercase; letter-spacing:4px; font-size:1.1em; text-align:center;">
+            <div id="joinError" style="color:var(--aup-red); font-size:0.82em; margin-bottom:12px; display:none;"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" onclick="joinClassroom()" style="flex:1;">Rejoindre</button>
+                <button class="btn" onclick="hideJoinModal()" style="flex:1; background:#eee; color:#555;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .role-badge {
+            padding: 4px 12px;
+            font-size: 0.72em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        .role-badge-student {
+            background: #e8f4fd;
+            color: var(--aup-blue);
+            border: 1px solid var(--aup-blue);
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-card {
+            background: white;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+        }
+    </style>
+
+    <script src="../static/main.js"></script>
+    <script>
+        function showJoinModal() {
+            document.getElementById('joinModal').classList.remove('hidden');
+            document.getElementById('joinCodeInput').focus();
+        }
+        function hideJoinModal() {
+            document.getElementById('joinModal').classList.add('hidden');
+            document.getElementById('joinCodeInput').value = '';
+            document.getElementById('joinError').style.display = 'none';
+        }
+        function joinClassroom() {
+            const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+            const errorDiv = document.getElementById('joinError');
+
+            if (!code) {
+                errorDiv.textContent = 'Veuillez entrer un code.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            fetch('/classroom/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            })
+            .then(r => r.json().then(d => ({ ok: r.ok, d })))
+            .then(({ ok, d }) => {
+                if (!ok) {
+                    errorDiv.textContent = d.error || 'Erreur inconnue.';
+                    errorDiv.style.display = 'block';
+                } else {
+                    hideJoinModal();
+                    window.location.reload();
+                }
+            })
+            .catch(() => {
+                errorDiv.textContent = 'Erreur réseau.';
+                errorDiv.style.display = 'block';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('joinCodeInput')?.addEventListener('keydown', e => {
+                if (e.key === 'Enter') joinClassroom();
+            });
+        });
+    </script>
+
+</body>
+</html>

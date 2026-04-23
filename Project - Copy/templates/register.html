@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | Créer un compte</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+
+    <nav>
+        <a href="{{ url_for('landing') }}">
+            <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        </a>
+        <div class="nav-links">
+            <a href="{{ url_for('login') }}">Se connecter</a>
+        </div>
+    </nav>
+
+    <div class="auth-header">
+        <h1>FrançaisBot</h1>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Créer un compte</h2>
+            <p class="subtitle">Rejoignez la plateforme et commencez à apprendre.</p>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul class="flash-list">
+                        {% for msg in messages %}
+                            <li>{{ msg }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Role selector -->
+            <div class="role-selector" style="margin-bottom: 24px;">
+                <p style="font-size:0.73em; text-transform:uppercase; letter-spacing:1.5px; color:#555; font-weight:500; margin-bottom:10px;">Je suis…</p>
+                <div class="role-toggle-row">
+                    <label class="role-option" id="labelStudent">
+                        <input type="radio" name="role_select" value="student" checked onchange="setRole('student')">
+                        <span class="role-box active" id="boxStudent">
+                            <span style="font-size:1.5em; display:block; margin-bottom:6px;">🎓</span>
+                            Étudiant
+                        </span>
+                    </label>
+                    <label class="role-option" id="labelTeacher">
+                        <input type="radio" name="role_select" value="teacher" onchange="setRole('teacher')">
+                        <span class="role-box" id="boxTeacher">
+                            <span style="font-size:1.5em; display:block; margin-bottom:6px;">📚</span>
+                            Enseignant
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('register') }}">
+                <input type="hidden" name="role" id="roleInput" value="student">
+
+                <div class="form-group">
+                    <label for="username">Nom d'utilisateur</label>
+                    <input type="text" id="username" name="username" placeholder="ex: alice.martin" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email institutionnel</label>
+                    <input type="email" id="email" name="email" placeholder="vous@aup.edu" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirmer le mot de passe</label>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-submit" id="submitBtn">Créer mon compte étudiant</button>
+            </form>
+
+            <div class="auth-switch">
+                Déjà un compte ? <a href="{{ url_for('login') }}">Se connecter</a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .role-toggle-row {
+            display: flex;
+            gap: 12px;
+        }
+        .role-option {
+            flex: 1;
+            cursor: pointer;
+        }
+        .role-option input[type="radio"] {
+            display: none;
+        }
+        .role-box {
+            display: block;
+            padding: 18px 10px;
+            border: 1.5px solid var(--aup-border);
+            text-align: center;
+            font-size: 0.82em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            background: #fafafa;
+            color: #888;
+        }
+        .role-box.active {
+            border-color: var(--aup-blue);
+            background: #f0f4ff;
+            color: var(--aup-blue);
+        }
+        .role-box:hover {
+            border-color: var(--aup-blue);
+            color: var(--aup-blue);
+        }
+    </style>
+
+    <script>
+        function setRole(role) {
+            document.getElementById('roleInput').value = role;
+            document.getElementById('boxStudent').classList.toggle('active', role === 'student');
+            document.getElementById('boxTeacher').classList.toggle('active', role === 'teacher');
+            const btn = document.getElementById('submitBtn');
+            btn.textContent = role === 'teacher' ? 'Créer mon compte enseignant' : 'Créer mon compte étudiant';
+        }
+    </script>
+
+</body>
+</html>

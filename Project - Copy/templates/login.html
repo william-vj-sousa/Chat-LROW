@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUP FrançaisBot | Connexion</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+
+    <nav>
+        <a href="{{ url_for('landing') }}">
+            <img src="{{ url_for('static', filename='aup.png') }}" alt="AUP Logo" class="logo-placeholder">
+        </a>
+        <div class="nav-links">
+            <a href="{{ url_for('register') }}">Créer un compte</a>
+        </div>
+    </nav>
+
+    <div class="auth-header">
+        <h1>FrançaisBot</h1>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Connexion</h2>
+            <p class="subtitle">Bon retour. Connectez-vous pour accéder à votre espace.</p>
+
+            <!-- Flash messages from Flask -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul class="flash-list">
+                        {% for msg in messages %}
+                            <li>{{ msg }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label for="email">Email institutionnel</label>
+                    <input type="email" id="email" name="email" placeholder="vous@aup.edu" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-submit">Se connecter</button>
+            </form>
+
+            <div class="auth-switch">
+                Pas encore de compte ? <a href="{{ url_for('register') }}">Créer un compte</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

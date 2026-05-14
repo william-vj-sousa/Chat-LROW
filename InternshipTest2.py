@@ -26,10 +26,26 @@ prompt = (
     "and make suggestions about tone."
 )
 
+# Keep the system prompt plus the most recent N user/assistant turns.
+MAX_MEMORY_TURNS = 6
+
 # The mem
 messages = [
     {"role": "system", "content": prompt}
 ]
+
+def trim_messages_to_window():
+    """Keep only the system prompt and the most recent conversation turns."""
+    global messages
+
+    system_message = messages[:1]
+    conversation_messages = messages[1:]
+    max_conversation_messages = MAX_MEMORY_TURNS * 2
+
+    if len(conversation_messages) > max_conversation_messages:
+        conversation_messages = conversation_messages[-max_conversation_messages:]
+
+    messages = system_message + conversation_messages
 
 @app.route('/')
 def home():
@@ -50,6 +66,7 @@ def chat():
     
     # Add the user's message to the conversation history
     messages.append({"role": "user", "content": user_input})
+    trim_messages_to_window()
     
     try:
         # Send the entire conversation to gbt4all
@@ -73,6 +90,7 @@ def chat():
 
         # Add the response to our conversation history
         messages.append({"role": "assistant", "content": reply})
+        trim_messages_to_window()
         
         # Send the response back to the HTML
         return jsonify({"response": reply})
